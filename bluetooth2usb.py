@@ -13,10 +13,10 @@ BLUETOOTH_CHANNEL = 1
 
 
 class UsbDevice:
-    def __init__(self):
+    def __init__(self, id_vendor, id_product):
         self.device = None
         while True:
-            self.device = usb.core.find(idVendor=USB_DEVICE_ID_VENDOR, idProduct=USB_DEVICE_ID_PRODUCT)
+            self.device = usb.core.find(idVendor=id_vendor, idProduct=id_product)
             if self.device is not None:
                 break
             time.sleep(1)
@@ -45,7 +45,7 @@ while True:
     if usb_device is None:
         print('Connecting to USB device...')
         try:
-            usb_device = UsbDevice()
+            usb_device = UsbDevice(USB_DEVICE_ID_VENDOR, USB_DEVICE_ID_PRODUCT)
         except Exception as e:
             print('Failed to connect to USB device:', e)
             time.sleep(1)
