@@ -5,67 +5,81 @@ import socket
 import usb.core
 
 
-PRINTER_USB_ID_VENDOR = 0x1fc9
-PRINTER_USB_ID_PRODUCT = 0x2016
-SERVER_BLUETOOTH_ADDRESS = 'B8:27:EB:7C:30:21'
+USB_DEVICE_ID_VENDOR = 0x1fc9
+USB_DEVICE_ID_PRODUCT = 0x2016
+
+BLUETOOTH_SERVER_ADDRESS = 'B8:27:EB:7C:30:21'
 BLUETOOTH_CHANNEL = 1
 
 
-class UsbPrinter:
+class UsbDevice:
     def __init__(self):
-        self.device = usb.core.find(idVendor=PRINTER_USB_ID_VENDOR, idProduct=PRINTER_USB_ID_PRODUCT)
-        if self.device is None:
-            raise ValueError('Device not found')
+        self.device = None
+        while True:
+            self.device = usb.core.find(idVendor=USB_DEVICE_ID_VENDOR, idProduct=USB_DEVICE_ID_PRODUCT)
+            if self.device is not None:
+                break
+            time.sleep(1)
         self.config = self.device.get_active_configuration()
         self.interface = self.config[(0, 0)]
         self.endpoint = self.interface[0]
         if self.device.is_kernel_driver_active(0):
             self.device.detach_kernel_driver(0)
     
+    def id(self):
+        return f'{self.device.idVendor:x}:{self.device.idProduct:x}'
+
     def write(self, data):
         self.endpoint.write(data)
 
 
-printer = None
-server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-server.bind((SERVER_BLUETOOTH_ADDRESS, BLUETOOTH_CHANNEL))
-server.listen(0)
-client = None
+usb_device = None
+bt_server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+bt_server.bind((BLUETOOTH_SERVER_ADDRESS, BLUETOOTH_CHANNEL))
+bt_server.listen(0)
+bt_client = None
 
 while True:
-    if printer is None:
-        print('Connecting to printer...')
+    print('-' * 50)
+
+    if usb_device is None:
+        print('Connecting to USB device...')
         try:
-            printer = UsbPrinter()
+            usb_device = UsbDevice()
         except Exception as e:
-            print('Failed to connect to printer:', e)
+            print('Failed to connect to USB device:', e)
             time.sleep(1)
             continue
-        print('Printer connected')
+    print('USB device connected:', usb_device.id())
 
-    if client is None:
-        print('Connecting to client...')
-        client, client_address = server.accept()
-        print('Client connected:', client_address)
+    if bt_client is None:
+        print('Connecting to Bluetooth client...')
+        try:
+            bt_client, bt_client_address = bt_server.accept()
+        except Exception as e:
+            print('Failed to connect to Bluetooth client:', e)
+            time.sleep(1)
+            continue
+    print('Bluetooth client connected:', bt_client_address)
 
     while True:
-        print('Receiving...')
+        print('Receiving data from Bluetooth client...')
         try:
-            data = client.recv(4096)
+            data = bt_client.recv(4096)
         except Exception as e:
-            print('Client disconnected:', e)
-            client.close()
-            client = None
+            print('Bluetooth client disconnected:', e)
+            bt_client.close()
+            bt_client = None
             break
         print(f'Received {len(data)} bytes')
 
-        print(f'Printing...')
+        print('Writing data to USB device...')
         try:
-            printer.write(data)
+            usb_device.write(data)
         except Exception as e:
-            print('Printer disconnected:', e)
-            client.send(b'f') # Fail
-            printer = None
+            print('USB device disconnected:', e)
+            bt_client.send(b'f') # Fail
+            usb_device = None
             break
-        print(f'Printed {len(data)} bytes')
-        client.send(b's') # Success
+        print(f'Wrote {len(data)} bytes')
+        bt_client.send(b's') # Success
