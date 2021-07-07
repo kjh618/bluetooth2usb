@@ -64,6 +64,7 @@ led.blink(1, 1)
 while True:
     print('-' * 50)
 
+    # TODO: Check if connected as well
     if usb_device is None:
         print('Connecting to USB device...')
         led.blink(0.2, 0.8)
@@ -76,6 +77,7 @@ while True:
 
     print('USB device connected:', usb_device.id())
 
+    # TODO: Check if connected as well
     if bt_client is None:
         print('Connecting to Bluetooth client...')
         led.blink(0.1, 0.1)
