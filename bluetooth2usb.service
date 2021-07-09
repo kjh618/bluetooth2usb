@@ -1,0 +1,11 @@
+[Unit]
+Description=bluetooth2usb
+After=bluetooth.target
+
+[Service]
+ExecStart=/home/pi/bluetooth2usb/bluetooth2usb.py
+WorkingDirectory=/home/pi/bluetooth2usb
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
