@@ -14,7 +14,7 @@ It can be used to convert a simple USB printer to a Bluetooth capable one.
 1. Download and copy `bluetooth2usb.py` to your Raspberry Pi.
 2. Modify the constant values `USB_DEVICE_ID_VENDOR`, `USB_DEVICE_ID_PRODUCT`, `BLUETOOTH_SERVER_ADDRESS`, `LED_PIN` at the top of the file as necessary.
 3. Run `bluetooth2usb.py`.
-4. Or to install it as a `systemd` service, follow the instruction at [the official Raspberry Pi docs](https://www.raspberrypi.org/documentation/linux/usage/systemd.md). Example `.service` file can be found at `bluetooth2usb.service`.
+4. To run it on boot, follow the instruction at [the official Raspberry Pi docs](https://www.raspberrypi.org/documentation/linux/usage/systemd.md) to install it as a `systemd` service. Example `.service` file can be found at `bluetooth2usb.service`.
 5. Connect a USB device and a Bluetooth client to the Pi.
 6. Send Bluetooth data from the client to the Pi. The connected USB device should receive the same data.
 
